@@ -61,7 +61,15 @@ export class Scene {
     const manager = this.componentManagers.get(type);
     return manager?.get(entityId);
   }
-  
+
+  /**
+   * Check if an entity has a specific component type
+   */
+  hasComponent(entityId: EntityId, type: string): boolean {
+    const manager = this.componentManagers.get(type);
+    return manager?.has(entityId) ?? false;
+  }
+
   /**
    * Remove a component from an entity
    */

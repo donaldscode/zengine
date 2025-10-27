@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zengine - Particle System Example</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a1a;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin: 0 0 20px 0;
+    }
+    canvas {
+      border: 2px solid #333;
+      background: #000;
+    }
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Zengine - Particle System Example</h1>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div class="controls">
+    <p>Click anywhere to create particles</p>
+  </div>
+
+  <script type="module">
+    import { Engine, Transform, Sprite, Velocity, MovementSystem, RenderSystem, System } from '../src/index.js';
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const engine = new Engine(canvas);
+    const scene = engine.getScene();
+
+    scene.addSystem(new MovementSystem(scene));
+    scene.addSystem(new RenderSystem(scene, ctx));
+
+    // Particle system
+    class ParticleSystem extends System {
+      constructor(scene) {
+        super();
+        this.scene = scene;
+        this.colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181'];
+        this.particleLifeTime = 2.0;
+        this.particlesToRemove = [];
+      }
+      
+      update(deltaTime) {
+        this.particlesToRemove.forEach(entityId => {
+          this.scene.removeEntity(entityId);
+        });
+        this.particlesToRemove = [];
+        
+        // Create particles on mouse position
+        if (this.mouseX !== undefined && this.mouseY !== undefined) {
+          this.createParticle(this.mouseX, this.mouseY);
+          this.mouseX = undefined;
+          this.mouseY = undefined;
+        }
+        
+        // Fade particles and remove old ones
+        const sprites = this.scene.getComponents('Sprite');
+        const transforms = this.scene.getComponents('Transform');
+        
+        sprites.forEach(sprite => {
+          sprite.opacity -= deltaTime / this.particleLifeTime;
+          if (sprite.opacity <= 0) {
+            this.particlesToRemove.push(sprite.entityId);
+          }
+        });
+      }
+      
+      createParticle(x, y) {
+        for (let i = 0; i < 10; i++) {
+          const particle = this.scene.createEntity();
+          
+          const transform = Transform.create(
+            particle, 
+            x + (Math.random() - 0.5) * 20, 
+            y + (Math.random() - 0.5) * 20
+          );
+          this.scene.registerComponent(transform, 'Transform');
+          
+          const sprite = Sprite.create(
+            particle, 
+            Math.random() * 10 + 5, 
+            Math.random() * 10 + 5, 
+            this.colors[Math.floor(Math.random() * this.colors.length)]
+          );
+          sprite.opacity = 1;
+          this.scene.registerComponent(sprite, 'Sprite');
+          
+          const velocity = Velocity.create(
+            particle,
+            (Math.random() - 0.5) * 400,
+            (Math.random() - 0.5) * 400
+          );
+          this.scene.registerComponent(velocity, 'Velocity');
+        }
+      }
+      
+      setMousePos(x, y) {
+        this.mouseX = x;
+        this.mouseY = y;
+      }
+    }
+
+    const particleSystem = new ParticleSystem(scene);
+    scene.addSystem(particleSystem);
+    
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      particleSystem.setMousePos(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    engine.start();
+  </script>
+</body>
+</html>
+

@@ -10,6 +10,8 @@ A lightweight, high-performance game engine built with TypeScript for modern web
 - 💪 **Type-Safe** - Full TypeScript support
 - 🎨 **Canvas Rendering** - Built-in 2D rendering system
 - 🔧 **Extensible** - Easy to add custom components and systems
+- ✅ **Well Tested** - Comprehensive test coverage
+- 🛠️ **Developer Friendly** - ESLint, Prettier, and CI/CD configured
 
 ## Installation
 
@@ -20,7 +22,15 @@ npm install
 ## Quick Start
 
 ```typescript
-import { Engine, Scene, Transform, Sprite, Velocity, MovementSystem, RenderSystem } from 'zengine';
+import {
+  Engine,
+  Scene,
+  Transform,
+  Sprite,
+  Velocity,
+  MovementSystem,
+  RenderSystem,
+} from 'zengine';
 
 // Get canvas element
 const canvas = document.querySelector('#gameCanvas');
@@ -102,6 +112,7 @@ scene.registerComponent(component, 'ComponentType');
 ## Built-in Components
 
 ### Transform
+
 Position, rotation, and scale.
 
 ```typescript
@@ -112,6 +123,7 @@ transform.scaleY = 2;
 ```
 
 ### Sprite
+
 Visual representation.
 
 ```typescript
@@ -120,6 +132,7 @@ sprite.opacity = 0.5;
 ```
 
 ### Velocity
+
 Movement speed.
 
 ```typescript
@@ -129,9 +142,11 @@ const velocity = Velocity.create(entityId, 100, -50);
 ## Built-in Systems
 
 ### MovementSystem
+
 Applies velocity to transform components.
 
 ### RenderSystem
+
 Renders all entities with Transform and Sprite components.
 
 ## Custom Components and Systems
@@ -180,13 +195,22 @@ export class DamageSystem extends System {
 
 ## Examples
 
-Run the interactive demo:
+### Interactive Demo
+
+Run the main demo:
 
 ```bash
 npm run example
 ```
 
 Then open the browser to see a live demo with bouncing colored rectangles.
+
+### Available Examples
+
+- **demo.html** - Interactive demo with bouncing shapes
+- **platformer.html** - Simple platformer game with keyboard controls
+- **particles.html** - Particle system with click-to-spawn effects
+- **simple.ts** - Basic implementation example
 
 ## Project Structure
 
@@ -227,6 +251,51 @@ npm run dev
 
 # Type checking
 npm run type-check
+
+# Run tests
+npm run test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+```
+
+## Testing
+
+Zengine includes comprehensive test coverage using Vitest:
+
+```bash
+# Run tests
+npm run test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Generate coverage report
+npm run test:coverage
+```
+
+## Code Quality
+
+The project uses ESLint and Prettier for code quality and consistency:
+
+```bash
+# Check for linting issues
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Check code formatting
+npm run format:check
+
+# Format code
+npm run format
 ```
 
 ## API Documentation
@@ -234,44 +303,57 @@ npm run type-check
 ### Engine
 
 #### `constructor(canvas: HTMLCanvasElement)`
+
 Creates a new engine instance with the given canvas.
 
 #### `getScene(): Scene`
+
 Returns the current scene.
 
 #### `start(): void`
+
 Starts the engine's game loop.
 
 #### `stop(): void`
+
 Stops the engine.
 
 #### `destroy(): void`
+
 Destroys the engine and cleans up resources.
 
 ### Scene
 
 #### `createEntity(): EntityId`
+
 Creates a new entity.
 
 #### `removeEntity(entityId: EntityId): void`
+
 Removes an entity and all its components.
 
 #### `registerComponent<T>(component: T, type: string): void`
+
 Registers a component.
 
 #### `getComponent<T>(entityId: EntityId, type: string): T | undefined`
+
 Gets a component for an entity.
 
 #### `getComponents<T>(type: string): T[]`
+
 Gets all components of a type.
 
 #### `addSystem(system: System): void`
+
 Adds a system to the scene.
 
 #### `removeSystem(system: System): void`
+
 Removes a system from the scene.
 
 #### `update(deltaTime: number): void`
+
 Updates all systems.
 
 ## License

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zengine - Platformer Example</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a1a;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin: 0 0 20px 0;
+    }
+    canvas {
+      border: 2px solid #333;
+      background: linear-gradient(to bottom, #87CEEB 0%, #98D8E8 100%);
+    }
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+    }
+    code {
+      background: #2a2a2a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🕹️ Zengine - Platformer Example</h1>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div class="controls">
+    <p>Use <code>Arrow Keys</code> or <code>WASD</code> to move</p>
+    <p><code>Space</code> to jump</p>
+  </div>
+
+  <script type="module">
+    import { Engine, Transform, Sprite, Velocity, MovementSystem, RenderSystem, System } from '../src/index.js';
+
+    // Setup canvas
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    
+    const engine = new Engine(canvas);
+    const scene = engine.getScene();
+
+    // Add systems
+    scene.addSystem(new MovementSystem(scene));
+    scene.addSystem(new RenderSystem(scene, ctx));
+
+    // Platformer control system
+    class PlatformerSystem extends System {
+      constructor(scene) {
+        super();
+        this.scene = scene;
+        this.keys = {};
+        
+        window.addEventListener('keydown', (e) => this.keys[e.key] = true);
+        window.addEventListener('keyup', (e) => this.keys[e.key] = false);
+      }
+      
+      update() {
+        const player = this.scene.getComponent(0, 'Transform');
+        const velocity = this.scene.getComponent(0, 'Velocity');
+        
+        if (velocity && player) {
+          velocity.vx = 0;
+          velocity.vy = 300; // Gravity
+          
+          if (this.keys['ArrowLeft'] || this.keys['a'] || this.keys['A']) {
+            velocity.vx = -200;
+          }
+          if (this.keys['ArrowRight'] || this.keys['d'] || this.keys['D']) {
+            velocity.vx = 200;
+          }
+          if ((this.keys[' '] || this.keys['ArrowUp'] || this.keys['w'] || this.keys['W']) && player.y >= 550) {
+            velocity.vy = -400;
+          }
+          
+          // Ground collision
+          if (player.y >= 550) {
+            player.y = 550;
+            velocity.vy = 0;
+          }
+        }
+      }
+    }
+
+    scene.addSystem(new PlatformerSystem(scene));
+
+    // Create player
+    const player = scene.createEntity();
+    const playerTransform = Transform.create(player, 100, 550);
+    scene.registerComponent(playerTransform, 'Transform');
+    
+    const playerSprite = Sprite.create(player, 30, 50, '#4a90e2');
+    scene.registerComponent(playerSprite, 'Sprite');
+    
+    const playerVelocity = Velocity.create(player, 0, 0);
+    scene.registerComponent(playerVelocity, 'Velocity');
+
+    // Create platforms
+    for (let i = 0; i < 5; i++) {
+      const platform = scene.createEntity();
+      const platTransform = Transform.create(platform, 150 + i * 120, 500 - i * 60);
+      scene.registerComponent(platTransform, 'Transform');
+      
+      const platSprite = Sprite.create(platform, 80, 20, '#8B4513');
+      scene.registerComponent(platSprite, 'Sprite');
+    }
+
+    engine.start();
+  </script>
+</body>
+</html>
