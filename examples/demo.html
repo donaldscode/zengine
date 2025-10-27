@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Zengine Demo</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #1a1a1a;
+      color: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    h1 {
+      margin: 0 0 20px 0;
+      font-size: 2em;
+    }
+    canvas {
+      border: 2px solid #333;
+      background: #000;
+    }
+    .controls {
+      margin-top: 20px;
+      text-align: center;
+    }
+    button {
+      padding: 10px 20px;
+      margin: 5px;
+      font-size: 16px;
+      background: #4a90e2;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #357abd;
+    }
+    code {
+      background: #2a2a2a;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-family: 'Courier New', monospace;
+    }
+  </style>
+</head>
+<body>
+  <h1>🎮 Zengine Demo</h1>
+  <canvas id="gameCanvas" width="800" height="600"></canvas>
+  <div class="controls">
+    <button id="addEntity">Add Random Entity</button>
+    <button id="clearAll">Clear All</button>
+  </div>
+  <p>Entities: <span id="entityCount">0</span></p>
+  
+  <script type="module">
+    import { Engine, Transform, Sprite, Velocity, MovementSystem, RenderSystem } from '../src/index.js';
+
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const engine = new Engine(canvas);
+    const scene = engine.getScene();
+
+    // Add systems
+    scene.addSystem(new MovementSystem(scene));
+    scene.addSystem(new RenderSystem(scene, ctx));
+
+    // Create some initial entities
+    const colors = ['#ff6b6b', '#4ecdc4', '#ffe66d', '#95e1d3', '#f38181', '#aa96da'];
+    
+    function createRandomEntity() {
+      const entityId = scene.createEntity();
+      
+      const x = Math.random() * canvas.width;
+      const y = Math.random() * canvas.height;
+      const transform = Transform.create(entityId, x, y);
+      transform.rotation = Math.random() * Math.PI * 2;
+      scene.registerComponent(transform, 'Transform');
+      
+      const size = 20 + Math.random() * 30;
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const sprite = Sprite.create(entityId, size, size, color);
+      scene.registerComponent(sprite, 'Sprite');
+      
+      const speed = 50 + Math.random() * 100;
+      const angle = Math.random() * Math.PI * 2;
+      const velocity = Velocity.create(
+        entityId,
+        Math.cos(angle) * speed,
+        Math.sin(angle) * speed
+      );
+      scene.registerComponent(velocity, 'Velocity');
+      
+      updateEntityCount();
+    }
+
+    function updateEntityCount() {
+      document.getElementById('entityCount').textContent = scene.getEntities().length;
+    }
+
+    function addClickHandler() {
+      document.getElementById('addEntity').addEventListener('click', createRandomEntity);
+      document.getElementById('clearAll').addEventListener('click', () => {
+        scene.clear();
+        // Re-add systems after clear
+        scene.addSystem(new MovementSystem(scene));
+        scene.addSystem(new RenderSystem(scene, ctx));
+        updateEntityCount();
+      });
+    }
+
+    function handleWallCollisions() {
+      const transforms = scene.getComponents('Transform');
+      const velocities = scene.getComponents('Velocity');
+      
+      for (const transform of transforms) {
+        const sprite = scene.getComponent(transform.entityId, 'Sprite');
+        const velocity = scene.getComponent(transform.entityId, 'Velocity');
+        
+        if (sprite && velocity) {
+          // Bounce off walls
+          if (transform.x <= sprite.width / 2 || transform.x >= canvas.width - sprite.width / 2) {
+            velocity.vx *= -1;
+          }
+          if (transform.y <= sprite.height / 2 || transform.y >= canvas.height - sprite.height / 2) {
+            velocity.vy *= -1;
+          }
+          
+          // Keep in bounds
+          transform.x = Math.max(sprite.width / 2, Math.min(canvas.width - sprite.width / 2, transform.x));
+          transform.y = Math.max(sprite.height / 2, Math.min(canvas.height - sprite.height / 2, transform.y));
+        }
+      }
+    }
+
+    // Add collision system
+    scene.addSystem({
+      update(deltaTime) {
+        handleWallCollisions();
+      }
+    });
+
+    // Initialize
+    addClickHandler();
+    
+    // Create initial entities
+    for (let i = 0; i < 10; i++) {
+      createRandomEntity();
+    }
+
+    // Start the engine
+    engine.start();
+
+    // Make engine globally accessible for debugging
+    window.engine = engine;
+    window.scene = scene;
+  </script>
+</body>
+</html>
+
